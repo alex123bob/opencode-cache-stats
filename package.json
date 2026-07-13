@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@jiali/opencode-cache-stats",
+  "name": "@alex123bob/opencode-cache-stats",
   "version": "1.0.1",
   "description": "opencode plugin — live cache hit rate widget in the TUI sidebar + per-session JSONL stats log",
   "type": "module",
