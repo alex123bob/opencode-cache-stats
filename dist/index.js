@@ -29,11 +29,7 @@ var server = async (_input) => {
     }
   };
 };
-var tui = async (...args) => {
-  const mod = await import('./tui.js');
-  return mod.tui(...args);
-};
 var id = "opencode-cache-stats";
-var src_default = { id, server, tui };
+var src_default = { id, server };
 
-export { src_default as default, id, server, tui };
+export { src_default as default, id, server };
