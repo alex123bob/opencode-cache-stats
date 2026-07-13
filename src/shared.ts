@@ -25,6 +25,7 @@ export type JsonlRecord = {
   inputRaw:   number
   output:     number
   totalInput: number
+  /** Per-turn cache hit rate: cacheRead / totalInput × 100 (not cumulative session rate) */
   hitRate:    number
 }
 
@@ -83,10 +84,15 @@ export function renderCacheStats(stats: SessionStats | undefined): string {
   return lines.join("\n")
 }
 
+let _statsDirEnsured = false
+
 /** Appends one JSON line to the stats file. Never throws. */
 export function appendJsonl(record: JsonlRecord): void {
   try {
-    mkdirSync(join(homedir(), ".config", "opencode"), { recursive: true })
+    if (!_statsDirEnsured) {
+      mkdirSync(join(homedir(), ".config", "opencode"), { recursive: true })
+      _statsDirEnsured = true
+    }
     appendFileSync(STATS_FILE, JSON.stringify(record) + "\n", "utf8")
   } catch {
     // never crash opencode over stats logging

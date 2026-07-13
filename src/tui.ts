@@ -42,6 +42,7 @@ export const tui: TuiPlugin = async (api) => {
       const sessionID = props.sessionID as string
       const propApi   = props.api as typeof api
       const propSub   = props.subscribe as (fn: () => void) => () => void
+      if (!propSub || !propApi) return null
       let textNode: any
 
       const sync = () => {
