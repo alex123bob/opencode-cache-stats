@@ -1,4 +1,6 @@
 import type { TuiPlugin } from "@opencode-ai/plugin/tui"
+import { onCleanup } from "solid-js"
+import { jsx } from "@opentui/solid/jsx-runtime"
 import {
   type SessionStats,
   renderCacheStats,
@@ -6,6 +8,31 @@ import {
   isCompletedAssistant,
   accumulateStats,
 } from "./shared.js"
+
+function CacheStatsWidget(props: Record<string, unknown>) {
+  const sessionID = props.sessionID as string
+  const api       = props.api as Parameters<TuiPlugin>[0]
+  const subscribe = props.subscribe as (fn: () => void) => () => void
+  const getStats  = props.getStats as () => SessionStats | undefined
+  let textNode: any
+
+  const sync = () => {
+    if (!textNode) return
+    const content = renderCacheStats(getStats())
+    textNode.content = content
+    textNode.visible = content.length > 0
+    textNode.height  = content.length > 0 ? "auto" : 0
+    api.renderer.requestRender()
+  }
+
+  onCleanup(subscribe(sync))
+
+  return jsx("text", {
+    ref: (ref: any) => { textNode = ref; sync() },
+    fg:  api.theme.current.textMuted,
+    children: renderCacheStats(getStats()) ?? "",
+  })
+}
 
 export const tui: TuiPlugin = async (api) => {
   // Per-session cumulative stats — TUI process accumulates independently from server process
@@ -31,58 +58,20 @@ export const tui: TuiPlugin = async (api) => {
     bump()
   })
 
-  // Register sidebar_content slot — gracefully skip if @opentui is unavailable
-  let offSlots: (() => void) | undefined
-
-  try {
-    const { jsx }       = await import("@opentui/solid/jsx-runtime")
-    const { onCleanup } = await import("solid-js")
-
-    function CacheStatsText(props: Record<string, unknown>) {
-      const sessionID = props.sessionID as string
-      const propApi   = props.api as typeof api
-      const propSub   = props.subscribe as (fn: () => void) => () => void
-      if (!propSub || !propApi) return null
-      let textNode: any
-
-      const sync = () => {
-        if (!textNode) return
-        const content = renderCacheStats(sessionStats.get(sessionID))
-        textNode.content = content
-        textNode.visible = content.length > 0
-        textNode.height  = content.length > 0 ? "auto" : 0
-        propApi.renderer.requestRender()
-      }
-
-      onCleanup(propSub(sync))
-
-      return jsx("text", {
-        ref: (ref: any) => { textNode = ref; sync() },
-        fg:  propApi.theme.current.textMuted,
-        children: renderCacheStats(sessionStats.get(sessionID)) ?? "",
-      })
-    }
-
-    const registration = api.slots.register({
-      slots: {
-        sidebar_content: (_ctx: any, slotProps: any) =>
-          jsx(CacheStatsText, {
-            sessionID: (slotProps.session_id ?? "") as string,
-            api,
-            subscribe,
-          }),
-      },
-    })
-
-    // slots.register returns an ID string, not a cleanup fn — store for documentation only
-    offSlots = typeof registration === "function" ? registration : undefined
-  } catch {
-    // @opentui unavailable — TUI widget silently disabled; server side still works
-  }
+  api.slots.register({
+    slots: {
+      sidebar_content: (_ctx, slotProps) =>
+        jsx(CacheStatsWidget, {
+          sessionID: slotProps.session_id ?? "",
+          api,
+          subscribe,
+          getStats: () => sessionStats.get(slotProps.session_id ?? ""),
+        }),
+    },
+  })
 
   api.lifecycle.onDispose(() => {
     offMessage()
-    offSlots?.()
   })
 }
 
