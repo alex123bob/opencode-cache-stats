@@ -3,7 +3,6 @@ import { onCleanup } from "solid-js"
 import { jsx } from "@opentui/solid/jsx-runtime"
 import {
   type AgentEntry,
-  type SessionStats,
   renderAllAgents,
   extractTokens,
   isCompletedAssistant,
@@ -49,12 +48,7 @@ export const tui: TuiPlugin = async (api) => {
     return () => listeners.delete(fn)
   }
 
-  const getAgentsSorted = (): AgentEntry[] => {
-    const all      = Array.from(agents.values())
-    const active   = all.filter(a => a.isActive).sort((a, b) => b.lastActive - a.lastActive)
-    const finished = all.filter(a => !a.isActive).sort((a, b) => b.lastActive - a.lastActive)
-    return [...active, ...finished]
-  }
+  const getAgents = (): AgentEntry[] => Array.from(agents.values())
 
   const markIdle = (sessionID: string) => {
     const entry = agents.get(sessionID)
@@ -109,7 +103,7 @@ export const tui: TuiPlugin = async (api) => {
         jsx(CacheStatsWidget, {
           api,
           subscribe,
-          getAgents: getAgentsSorted,
+          getAgents: getAgents,
         }),
     },
   })
