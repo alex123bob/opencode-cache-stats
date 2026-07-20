@@ -33,11 +33,11 @@ Restart opencode. After the first assistant response, the right-column sidebar s
 
 > **All sidebar values are cumulative for the entire session** — they accumulate
 > across every turn, not reset per turn. The JSONL file records per-turn values
-> so you can analyse individual turns separately.
+> so you can analyze individual turns separately.
 
 | Metric | What it means |
 |---|---|
-| **Hit rate** | `cacheRead / (cacheRead + cacheWrite + rawInput) × 100` — the fraction of total input tokens served from cache. Higher is cheaper and faster. |
+| **Hit rate** | `cacheRead / (cacheRead + cacheWrite + inputRaw) × 100` — the fraction of total input tokens served from cache. Higher is cheaper and faster. |
 | **Read** | Tokens retrieved from the prompt cache (cache hits). These are not re-processed by the model, so they cost less. |
 | **Written** | Tokens written into the prompt cache this session (cache misses that seeded the cache). Only shown when non-zero. Not all providers report this. |
 | **Raw input** | Fresh, uncached input tokens — the part of your prompt that was processed from scratch. |
@@ -60,7 +60,7 @@ Example record:
 
 > **Note:** The `hitRate` field in the JSONL file is **per-turn** (computed from
 > that turn's tokens only). The sidebar hit rate is session-cumulative. Both use
-> the same formula: `cacheRead / totalInput × 100`.
+> the same formula: `cacheRead / (cacheRead + cacheWrite + inputRaw) × 100`.
 
 ## Cache hit rate definition
 
