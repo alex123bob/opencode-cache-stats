@@ -4,6 +4,7 @@ import { jsx } from "@opentui/solid/jsx-runtime"
 import {
   type AgentEntry,
   renderAllAgents,
+  renderAgentSection,
   extractTokens,
   extractSessionParent,
   isCompletedAssistant,
@@ -11,26 +12,50 @@ import {
 } from "./shared.js"
 
 function CacheStatsWidget(props: Record<string, unknown>) {
-  const api       = props.api as Parameters<TuiPlugin>[0]
-  const subscribe = props.subscribe as (fn: () => void) => () => void
-  const getAgents = props.getAgents as () => AgentEntry[]
-  let textNode: any
+  const api        = props.api as Parameters<TuiPlugin>[0]
+  const subscribe  = props.subscribe as (fn: () => void) => () => void
+  const getAgents  = props.getAgents as () => AgentEntry[]
+  const onToggle   = props.onToggle as (sessionID: string) => void
+  let containerRef: any
 
   const sync = () => {
-    if (!textNode) return
-    const content = renderAllAgents(getAgents())
-    textNode.content = content
-    textNode.visible = content.length > 0
-    textNode.height  = content.length > 0 ? "auto" : 0
+    if (!containerRef) return
+    const agents = getAgents()
+
+    // Remove old children
+    containerRef.children = []
+
+    if (agents.length === 0) {
+      containerRef.visible = false
+      containerRef.height  = 0
+      api.renderer.requestRender()
+      return
+    }
+
+    containerRef.visible = true
+    containerRef.height  = "auto"
+
+    const active   = agents.filter(a => a.isActive).sort((a, b) => b.lastActive - a.lastActive)
+    const finished = agents.filter(a => !a.isActive).sort((a, b) => b.lastActive - a.lastActive)
+
+    for (const agent of [...active, ...finished]) {
+      const content = renderAgentSection(agent)
+      const node = jsx("text", {
+        fg:       api.theme.current.textMuted,
+        children: content,
+        onClick:  () => onToggle(agent.sessionID),
+      })
+      containerRef.children.push(node)
+    }
+
     api.renderer.requestRender()
   }
 
   onCleanup(subscribe(sync))
 
-  return jsx("text", {
-    ref: (ref: any) => { textNode = ref; sync() },
-    fg:  api.theme.current.textMuted,
-    children: renderAllAgents(getAgents()) ?? "",
+  return jsx("box", {
+    ref:    (ref: any) => { containerRef = ref; sync() },
+    layout: "vertical",
   })
 }
 
@@ -53,10 +78,17 @@ export const tui: TuiPlugin = async (api) => {
 
   const getAgents = (): AgentEntry[] => Array.from(agents.values())
 
+  const toggleCollapse = (sessionID: string) => {
+    const entry = agents.get(sessionID)
+    if (!entry) return
+    agents.set(sessionID, { ...entry, collapsed: !entry.collapsed })
+    bump()
+  }
+
   const markIdle = (sessionID: string) => {
     const entry = agents.get(sessionID)
     if (!entry) return
-    agents.set(sessionID, { ...entry, isActive: false })
+    agents.set(sessionID, { ...entry, isActive: false, collapsed: true })
     bump()
   }
 
@@ -114,7 +146,8 @@ export const tui: TuiPlugin = async (api) => {
         jsx(CacheStatsWidget, {
           api,
           subscribe,
-          getAgents: getAgents,
+          getAgents,
+          onToggle: toggleCollapse,
         }),
     },
   })
