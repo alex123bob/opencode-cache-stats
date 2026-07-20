@@ -78,11 +78,21 @@ Example record:
 
 ## Live dashboard
 
-Start a live web dashboard to explore your cache stats:
+Start a live web dashboard to explore your cache stats.
+
+Opencode installs plugins in `~/.cache/opencode/packages/`. Run the dashboard via the `.bin/` symlink opencode creates there:
 
 ```bash
-npx oc-cache-dashboard
+~/.cache/opencode/packages/@alex123bob/opencode-cache-stats@latest/node_modules/.bin/oc-cache-dashboard
 ```
+
+Add a shell alias for convenience (add to `~/.zshrc` or `~/.bashrc`):
+
+```bash
+alias oc-dash='~/.cache/opencode/packages/@alex123bob/opencode-cache-stats@latest/node_modules/.bin/oc-cache-dashboard'
+```
+
+Then just run `oc-dash`.
 
 Opens `http://localhost:4321` in your browser automatically. The dashboard:
 
