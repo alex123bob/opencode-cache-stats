@@ -5,6 +5,7 @@ import {
   type AgentEntry,
   renderAllAgents,
   extractTokens,
+  extractSessionParent,
   isCompletedAssistant,
   accumulateStats,
 } from "./shared.js"
@@ -37,6 +38,8 @@ export const tui: TuiPlugin = async (api) => {
   // Per-agent cumulative stats — TUI process accumulates independently from server process
   const agents        = new Map<string, AgentEntry>()
   const idleTimers    = new Map<string, ReturnType<typeof setTimeout>>()
+  // sessionParents: populated from session.created events; used to detect subagents
+  const sessionParents = new Map<string, string | null>()  // sessionID → parentID
   let   subagentCount = 0
   const IDLE_MS       = 30_000
 
@@ -63,6 +66,12 @@ export const tui: TuiPlugin = async (api) => {
     idleTimers.set(sessionID, setTimeout(() => markIdle(sessionID), IDLE_MS))
   }
 
+  // Track session parentID from session.created events
+  const offSession = api.event.on("session.created", (evt) => {
+    const s = extractSessionParent(evt)
+    if (s) sessionParents.set(s.sessionID, s.parentID)
+  })
+
   // Accumulate stats from message.updated events
   const offMessage = api.event.on("message.updated", (evt) => {
     if (!isCompletedAssistant(evt)) return
@@ -73,11 +82,12 @@ export const tui: TuiPlugin = async (api) => {
 
     // Register agent on first sight
     if (!agents.has(sessionID)) {
-      const isSubagent = tokens.parentSessionID !== null
+      const parentID   = sessionParents.get(sessionID) ?? null
+      const isSubagent = parentID !== null
       const label      = isSubagent ? `Subagent ${++subagentCount}` : "Main Agent"
       agents.set(sessionID, {
         sessionID,
-        parentID:   tokens.parentSessionID,
+        parentID,
         label,
         isActive:   true,
         lastActive: Date.now(),
@@ -109,6 +119,7 @@ export const tui: TuiPlugin = async (api) => {
   })
 
   api.lifecycle.onDispose(() => {
+    offSession()
     offMessage()
     for (const t of idleTimers.values()) clearTimeout(t)
     idleTimers.clear()

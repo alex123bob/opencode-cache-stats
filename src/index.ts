@@ -6,6 +6,7 @@ import {
   computeHitRate,
   appendJsonl,
   extractTokens,
+  extractSessionParent,
   isCompletedAssistant,
   accumulateStats,
 } from "./shared.js"
@@ -15,11 +16,19 @@ import {
 export const server: Plugin = async (_input) => {
   const sessionStats:   Map<string, SessionStats> = new Map()
   const agentLabels:    Map<string, string>        = new Map()
-  // Process-local counter — may differ from TUI's counter; use parentSessionID for cross-process correlation
+  const sessionParents: Map<string, string | null> = new Map()  // sessionID → parentID
+  // Process-local counter — may differ from TUI's counter; use parentID for cross-process correlation
   let   subagentCount = 0
 
   return {
     event: async ({ event }) => {
+      // Track session parentID from session.created
+      const sessionInfo = extractSessionParent(event)
+      if (sessionInfo) {
+        sessionParents.set(sessionInfo.sessionID, sessionInfo.parentID)
+        return
+      }
+
       if (!isCompletedAssistant(event)) return
 
       const info      = (event.properties as any).info
@@ -31,26 +40,28 @@ export const server: Plugin = async (_input) => {
 
       // Assign label on first sight
       if (!agentLabels.has(sessionID)) {
-        const isSubagent = tokens.parentSessionID !== null
+        const parentID   = sessionParents.get(sessionID) ?? null
+        const isSubagent = parentID !== null
         agentLabels.set(sessionID, isSubagent ? `Subagent ${++subagentCount}` : "Main Agent")
       }
       const agentLabel = agentLabels.get(sessionID)!
+      const parentID   = sessionParents.get(sessionID) ?? null
 
       const totalInput = tokens.cacheRead + tokens.cacheWrite + tokens.inputRaw
 
       const record: JsonlRecord = {
-        ts:              new Date().toISOString(),
+        ts:         new Date().toISOString(),
         sessionID,
-        providerID:      tokens.providerID,
-        modelID:         tokens.modelID,
-        turn:            next.turnCount,
-        cacheRead:       tokens.cacheRead,
-        cacheWrite:      tokens.cacheWrite,
-        inputRaw:        tokens.inputRaw,
-        output:          tokens.output,
+        providerID: tokens.providerID,
+        modelID:    tokens.modelID,
+        turn:       next.turnCount,
+        cacheRead:  tokens.cacheRead,
+        cacheWrite: tokens.cacheWrite,
+        inputRaw:   tokens.inputRaw,
+        output:     tokens.output,
         totalInput,
-        hitRate:         computeHitRate(tokens.cacheRead, totalInput),
-        parentSessionID: tokens.parentSessionID,
+        hitRate:    computeHitRate(tokens.cacheRead, totalInput),
+        parentID,
         agentLabel,
       }
 

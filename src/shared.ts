@@ -36,7 +36,7 @@ export type JsonlRecord = {
   totalInput:      number
   /** Per-turn cache hit rate: cacheRead / totalInput × 100 (not cumulative session rate) */
   hitRate:         number
-  parentSessionID: string | null  // null for main agent turns
+  parentID:        string | null  // Session.parentID — null for main agent sessions
   agentLabel:      string         // "Main Agent" | "Subagent N"
 }
 
@@ -127,24 +127,36 @@ export function appendJsonl(record: JsonlRecord): void {
   }
 }
 
-/** Extracts and accumulates cache token fields from a completed AssistantMessage info object. */
+/** Extracts cache token fields from a completed AssistantMessage info object. */
 export function extractTokens(info: any): {
-  cacheRead:       number
-  cacheWrite:      number
-  inputRaw:        number
-  output:          number
-  providerID:      string
-  modelID:         string
-  parentSessionID: string | null
+  cacheRead:  number
+  cacheWrite: number
+  inputRaw:   number
+  output:     number
+  providerID: string
+  modelID:    string
 } {
   return {
-    cacheRead:       info?.tokens?.cache?.read  ?? 0,
-    cacheWrite:      info?.tokens?.cache?.write ?? 0,
-    inputRaw:        info?.tokens?.input        ?? 0,
-    output:          info?.tokens?.output       ?? 0,
-    providerID:      info?.providerID ?? "unknown",
-    modelID:         info?.modelID    ?? "unknown",
-    parentSessionID: info?.parentSessionID ?? null,
+    cacheRead:  info?.tokens?.cache?.read  ?? 0,
+    cacheWrite: info?.tokens?.cache?.write ?? 0,
+    inputRaw:   info?.tokens?.input        ?? 0,
+    output:     info?.tokens?.output       ?? 0,
+    providerID: info?.providerID ?? "unknown",
+    modelID:    info?.modelID    ?? "unknown",
+  }
+}
+
+/**
+ * Returns true when a session.created event has a parentID — i.e. it is a subagent session.
+ * Session.parentID comes from the session.created event, not from message events.
+ */
+export function extractSessionParent(event: any): { sessionID: string; parentID: string | null } | null {
+  if (event?.type !== "session.created" && event?.type !== "session.updated") return null
+  const info = event?.properties?.info
+  if (!info?.id) return null
+  return {
+    sessionID: info.id as string,
+    parentID:  info.parentID ?? null,
   }
 }
 
