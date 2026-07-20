@@ -17,17 +17,9 @@ Then add to `~/.config/opencode/opencode.json`:
 }
 ```
 
-Restart opencode. After the first assistant response, the right-column sidebar shows:
+Restart opencode. After the first assistant response, the right-column sidebar shows cache stats for each agent.
 
-```
-── Cache ─────────────────────
-  Hit rate:  68.9%
-  Read:      1,240 tok
-  Written:     512 tok
-  Raw input:   308 tok
-  Output:      320 tok
-  Turns:           3
-```
+![TUI sidebar showing collapsible agent sections](docs/screenshots/sidebar.png)
 
 ## Sidebar behaviour
 
@@ -100,6 +92,36 @@ Opens `http://localhost:4321` in your browser automatically. The dashboard:
 - **5 views:** Turn Timeline, Turn Deltas, Hit Rate Trend, Token Composition, Cross-session Heatmap
 - **Per-turn deltas** — see how cache read/write/raw changed turn-over-turn and whether the cache is warming up
 - **Filters** — narrow by time range (today / 7d / 30d) and agent type (main / subagents)
+
+### Turn Timeline
+
+Hit rate per turn as a bar chart, plus a per-turn token composition table (green = cache read, yellow = cache write, red = raw input).
+
+![Turn Timeline tab](docs/screenshots/dashbaord-turntime.png)
+
+### Turn Deltas
+
+How each metric changed turn-over-turn for the same agent — instantly shows whether the cache is warming up or context shifted.
+
+![Turn Deltas tab](docs/screenshots/dashboard-turndelta.png)
+
+### Hit Rate Trend
+
+Hit rate across sessions over time, with a session table. Red dots mark sessions with cold cache.
+
+![Hit Rate Trend tab](docs/screenshots/dashbaord-hitratetrend.png)
+
+### Token Composition
+
+Session-level breakdown of cache read vs written vs raw input, plus write/read ratio and per-agent table.
+
+![Token Composition tab](docs/screenshots/dashboard-tokenconsumption.png)
+
+### Cross-session Heatmap
+
+30-day activity heatmap (colour = avg daily hit rate) and daily summary table.
+
+![Cross-session Heatmap tab](docs/screenshots/dashbaord-crosssession.png)
 
 ### Options
 
