@@ -15,6 +15,7 @@ import {
 export const server: Plugin = async (_input) => {
   const sessionStats:   Map<string, SessionStats> = new Map()
   const agentLabels:    Map<string, string>        = new Map()
+  // Process-local counter — may differ from TUI's counter; use parentSessionID for cross-process correlation
   let   subagentCount = 0
 
   return {
