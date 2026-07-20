@@ -58,5 +58,7 @@ var tui = async (api) => {
     offMessage();
   });
 };
+var id = "opencode-cache-stats";
+var tui_default = { id, tui };
 
-export { tui };
+export { tui_default as default, id, tui };

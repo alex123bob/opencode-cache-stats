@@ -1,4 +1,4 @@
-import type { TuiPlugin } from "@opencode-ai/plugin/tui"
+import type { TuiPlugin, TuiPluginModule } from "@opencode-ai/plugin/tui"
 import { onCleanup } from "solid-js"
 import { jsx } from "@opentui/solid/jsx-runtime"
 import {
@@ -74,3 +74,9 @@ export const tui: TuiPlugin = async (api) => {
     offMessage()
   })
 }
+
+// ── Plugin metadata ────────────────────────────────────────────────────────
+
+export const id = "opencode-cache-stats"
+
+export default { id, tui } satisfies TuiPluginModule

@@ -1,4 +1,5 @@
 import type { Plugin } from "@opencode-ai/plugin"
+import type { TuiPlugin } from "@opencode-ai/plugin/tui"
 import {
   type SessionStats,
   type JsonlRecord,
@@ -46,6 +47,17 @@ export const server: Plugin = async (_input) => {
   }
 }
 
+// ── TUI lazy loader ────────────────────────────────────────────────────────
+// Loaded only by the TUI process; keeps server bundle free of opentui deps.
+
+const rootTui: TuiPlugin = async (...args) => {
+  const mod = await import("./tui.js")
+  return mod.tui(...args)
+}
+export { rootTui as tui }
+
 // ── Plugin metadata ────────────────────────────────────────────────────────
 
 export const id = "opencode-cache-stats"
+
+export default { id, server }
