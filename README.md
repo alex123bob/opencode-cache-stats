@@ -13,7 +13,7 @@ Then add to `~/.config/opencode/opencode.json`:
 
 ```json
 {
-  "plugin": ["opencode-cache-stats"]
+  "plugin": ["@alex123bob/opencode-cache-stats"]
 }
 ```
 
