@@ -55,7 +55,7 @@ Each completed turn appends one JSON line to:
 Example record:
 
 ```json
-{"ts":"2026-07-13T10:23:01.000Z","sessionID":"ses_abc123","providerID":"anthropic","modelID":"claude-sonnet-4-6","turn":3,"cacheRead":1240,"cacheWrite":512,"inputRaw":308,"output":320,"totalInput":2060,"hitRate":60.2}
+{"ts":"2026-07-20T10:23:01.000Z","sessionID":"ses_abc123","providerID":"anthropic","modelID":"claude-sonnet-4-6","turn":3,"cacheRead":1240,"cacheWrite":512,"inputRaw":308,"output":320,"totalInput":2060,"hitRate":60.2,"parentSessionID":null,"agentLabel":"Main Agent"}
 ```
 
 > **Note:** The `hitRate` field in the JSONL file is **per-turn** (computed from
