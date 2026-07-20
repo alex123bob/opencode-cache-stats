@@ -15,48 +15,52 @@ function CacheStatsWidget(props: Record<string, unknown>) {
   const subscribe  = props.subscribe as (fn: () => void) => () => void
   const getAgents  = props.getAgents as () => AgentEntry[]
   const onToggle   = props.onToggle as (sessionID: string) => void
-  let containerRef: any
+  let textNode: any
+  // Ordered list of agents mirroring last render, used for click hit-testing
+  let lastAgentOrder: AgentEntry[] = []
 
-  const sync = () => {
-    if (!containerRef) return
-    const agents = getAgents()
-
-    // Remove old children
-    for (const child of containerRef.getChildren()) {
-      containerRef.remove(child)
-    }
-
-    if (agents.length === 0) {
-      containerRef.visible = false
-      containerRef.height  = 0
-      api.renderer.requestRender()
-      return
-    }
-
-    containerRef.visible = true
-    containerRef.height  = "auto"
-
+  const buildContent = (agents: AgentEntry[]): string => {
     const active   = agents.filter(a => a.isActive).sort((a, b) => b.lastActive - a.lastActive)
     const finished = agents.filter(a => !a.isActive).sort((a, b) => b.lastActive - a.lastActive)
+    lastAgentOrder = [...active, ...finished]
+    return lastAgentOrder.map(renderAgentSection).join("\n")
+  }
 
-    for (const agent of [...active, ...finished]) {
-      const content = renderAgentSection(agent)
-      const node = jsx("text", {
-        fg:       api.theme.current.textMuted,
-        children: content,
-        onClick:  () => onToggle(agent.sessionID),
-      })
-      containerRef.add(node)
-    }
-
+  const sync = () => {
+    if (!textNode) return
+    const agents = getAgents()
+    const content = agents.length > 0 ? buildContent(agents) : ""
+    textNode.content = content
+    textNode.visible = content.length > 0
+    textNode.height  = content.length > 0 ? "auto" : 0
     api.renderer.requestRender()
   }
 
   onCleanup(subscribe(sync))
 
-  return jsx("box", {
-    ref:    (ref: any) => { containerRef = ref; sync() },
-    layout: "vertical",
+  return jsx("text", {
+    ref: (ref: any) => {
+      textNode = ref
+      // Wire mouse click: determine which agent's header line was clicked by
+      // mapping the click's relative row to each agent's rendered line range.
+      textNode.onMouseUp = (evt: any) => {
+        const relRow = evt.y - (textNode.screenY ?? 0)
+        let lineOffset = 0
+        for (const agent of lastAgentOrder) {
+          const sectionText = renderAgentSection(agent)
+          const sectionLines = sectionText.split("\n").length
+          if (relRow >= lineOffset && relRow < lineOffset + sectionLines) {
+            // Only toggle if the click landed on the header (first line of section)
+            if (relRow === lineOffset) onToggle(agent.sessionID)
+            break
+          }
+          lineOffset += sectionLines + 1 // +1 for the "\n" join separator
+        }
+      }
+      sync()
+    },
+    fg:       api.theme.current.textMuted,
+    children: "",
   })
 }
 
