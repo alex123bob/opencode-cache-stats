@@ -14,19 +14,30 @@ export type SessionStats = {
   modelID:    string
 }
 
-export type JsonlRecord = {
-  ts:         string
+export type AgentEntry = {
   sessionID:  string
-  providerID: string
-  modelID:    string
-  turn:       number
-  cacheRead:  number
-  cacheWrite: number
-  inputRaw:   number
-  output:     number
-  totalInput: number
+  parentID:   string | null  // null = main agent
+  label:      string         // "Main Agent" | "Subagent 1" | "Subagent 2" ...
+  isActive:   boolean        // true while turns are still arriving
+  lastActive: number         // Date.now() at last completed turn
+  stats:      SessionStats
+}
+
+export type JsonlRecord = {
+  ts:              string
+  sessionID:       string
+  providerID:      string
+  modelID:         string
+  turn:            number
+  cacheRead:       number
+  cacheWrite:      number
+  inputRaw:        number
+  output:          number
+  totalInput:      number
   /** Per-turn cache hit rate: cacheRead / totalInput × 100 (not cumulative session rate) */
-  hitRate:    number
+  hitRate:         number
+  parentSessionID: string | null  // null for main agent turns
+  agentLabel:      string         // "Main Agent" | "Subagent N"
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -47,14 +58,33 @@ export function fmt(n: number): string {
 }
 
 /**
- * Renders the sidebar text block for a session.
- * Returns an empty string when stats is undefined (widget hidden).
+ * Renders the full sidebar text block for all known agents.
+ * Active agents first (most recently active at top), finished agents below (dimmed via caller).
+ * Returns empty string when agents array is empty (widget hidden).
  */
-export function renderCacheStats(stats: SessionStats | undefined): string {
-  if (!stats) return ""
+export function renderAllAgents(agents: AgentEntry[]): string {
+  if (agents.length === 0) return ""
 
+  const active   = agents.filter(a => a.isActive)
+    .sort((a, b) => b.lastActive - a.lastActive)
+  const finished = agents.filter(a => !a.isActive)
+    .sort((a, b) => b.lastActive - a.lastActive)
+
+  const sorted = [...active, ...finished]
+
+  return sorted.map(agent => renderAgentSection(agent)).join("\n")
+}
+
+/**
+ * Renders one agent's stats block.
+ */
+export function renderAgentSection(agent: AgentEntry): string {
+  const headerLabel = agent.isActive ? `${agent.label} (active)` : agent.label
+  // Pad header to fixed width of 29 chars after "── "
+  const sep = `── ${headerLabel} ` + "─".repeat(Math.max(2, 29 - headerLabel.length))
+
+  const { stats } = agent
   const totalInput = stats.cacheRead + stats.cacheWrite + stats.inputRaw
-  const sep = "── Cache " + "─".repeat(20)
 
   if (totalInput <= 0) {
     return [
@@ -101,20 +131,22 @@ export function appendJsonl(record: JsonlRecord): void {
 
 /** Extracts and accumulates cache token fields from a completed AssistantMessage info object. */
 export function extractTokens(info: any): {
-  cacheRead: number
-  cacheWrite: number
-  inputRaw: number
-  output: number
-  providerID: string
-  modelID: string
+  cacheRead:       number
+  cacheWrite:      number
+  inputRaw:        number
+  output:          number
+  providerID:      string
+  modelID:         string
+  parentSessionID: string | null
 } {
   return {
-    cacheRead:  info?.tokens?.cache?.read  ?? 0,
-    cacheWrite: info?.tokens?.cache?.write ?? 0,
-    inputRaw:   info?.tokens?.input        ?? 0,
-    output:     info?.tokens?.output       ?? 0,
-    providerID: info?.providerID ?? "unknown",
-    modelID:    info?.modelID    ?? "unknown",
+    cacheRead:       info?.tokens?.cache?.read  ?? 0,
+    cacheWrite:      info?.tokens?.cache?.write ?? 0,
+    inputRaw:        info?.tokens?.input        ?? 0,
+    output:          info?.tokens?.output       ?? 0,
+    providerID:      info?.providerID ?? "unknown",
+    modelID:         info?.modelID    ?? "unknown",
+    parentSessionID: info?.parentSessionID ?? null,
   }
 }
 
