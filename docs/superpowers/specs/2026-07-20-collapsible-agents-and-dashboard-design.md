@@ -197,11 +197,34 @@ Filters apply to all tabs simultaneously. Active session (live) is always highli
 - Client replaces data in-place (no full page reload). Charts and tables re-render.
 - SSE reconnects automatically on disconnect (standard EventSource behaviour).
 
+### Startup & shutdown
+
+The server runs **in the foreground**. Stop it with **Ctrl+C**. No daemon mode, no pid file.
+
+On startup, the server prints:
+
+```
+  Cache stats dashboard running at http://localhost:4321
+  Watching ~/.config/opencode/cache-stats.jsonl
+  Press Ctrl+C to stop.
+```
+
+**Port conflict handling:** If the requested port is in use, the server automatically tries the next port (4322, 4323, …) up to 10 increments, then starts on the first free one. The actual URL is always printed to stdout so the user knows where to go. This means two dashboards can run side-by-side without error.
+
+Example output when default port is taken:
+
+```
+  Port 4321 in use, trying 4322...
+  Cache stats dashboard running at http://localhost:4322
+  Watching ~/.config/opencode/cache-stats.jsonl
+  Press Ctrl+C to stop.
+```
+
 ### CLI flags
 
 | Flag | Default | Description |
 |---|---|---|
-| `--port` | `4321` | HTTP port |
+| `--port` | `4321` | Preferred HTTP port (auto-increments if in use) |
 | `--file` | `~/.config/opencode/cache-stats.jsonl` | Path to JSONL |
 | `--no-open` | false | Don't auto-open browser |
 
