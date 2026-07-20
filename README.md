@@ -29,6 +29,20 @@ Restart opencode. After the first assistant response, the right-column sidebar s
   Turns:           3
 ```
 
+## Sidebar behaviour
+
+Active agents show full stats. When an agent finishes (no response for 30 s) its section
+collapses to a single header line. Click any header to expand or collapse it manually.
+
+```
+▼ Main Agent (active) ────────
+  Hit rate:  68.9%
+  Read:      1,240 tok
+  Turns:         3
+▶ Subagent 1 [done] ──────────   ← click to expand
+▶ Subagent 2 [done] ──────────
+```
+
 ## Understanding the metrics
 
 > **All sidebar values are cumulative for the entire session** — they accumulate
