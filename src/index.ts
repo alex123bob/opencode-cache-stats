@@ -13,7 +13,9 @@ import {
 // ── Server export ──────────────────────────────────────────────────────────
 
 export const server: Plugin = async (_input) => {
-  const sessionStats = new Map<string, SessionStats>()
+  const sessionStats:   Map<string, SessionStats> = new Map()
+  const agentLabels:    Map<string, string>        = new Map()
+  let   subagentCount = 0
 
   return {
     event: async ({ event }) => {
@@ -26,20 +28,29 @@ export const server: Plugin = async (_input) => {
 
       sessionStats.set(sessionID, next)
 
+      // Assign label on first sight
+      if (!agentLabels.has(sessionID)) {
+        const isSubagent = tokens.parentSessionID !== null
+        agentLabels.set(sessionID, isSubagent ? `Subagent ${++subagentCount}` : "Main Agent")
+      }
+      const agentLabel = agentLabels.get(sessionID)!
+
       const totalInput = tokens.cacheRead + tokens.cacheWrite + tokens.inputRaw
 
       const record: JsonlRecord = {
-        ts:         new Date().toISOString(),
+        ts:              new Date().toISOString(),
         sessionID,
-        providerID: tokens.providerID,
-        modelID:    tokens.modelID,
-        turn:       next.turnCount,
-        cacheRead:  tokens.cacheRead,
-        cacheWrite: tokens.cacheWrite,
-        inputRaw:   tokens.inputRaw,
-        output:     tokens.output,
+        providerID:      tokens.providerID,
+        modelID:         tokens.modelID,
+        turn:            next.turnCount,
+        cacheRead:       tokens.cacheRead,
+        cacheWrite:      tokens.cacheWrite,
+        inputRaw:        tokens.inputRaw,
+        output:          tokens.output,
         totalInput,
-        hitRate:    computeHitRate(tokens.cacheRead, totalInput),
+        hitRate:         computeHitRate(tokens.cacheRead, totalInput),
+        parentSessionID: tokens.parentSessionID,
+        agentLabel,
       }
 
       appendJsonl(record)
