@@ -70,9 +70,7 @@ export function renderAllAgents(agents: AgentEntry[]): string {
   const finished = agents.filter(a => !a.isActive)
     .sort((a, b) => b.lastActive - a.lastActive)
 
-  const sorted = [...active, ...finished]
-
-  return sorted.map(agent => renderAgentSection(agent)).join("\n")
+  return [...active, ...finished].map(renderAgentSection).join("\n")
 }
 
 /**
@@ -80,7 +78,7 @@ export function renderAllAgents(agents: AgentEntry[]): string {
  */
 export function renderAgentSection(agent: AgentEntry): string {
   const headerLabel = agent.isActive ? `${agent.label} (active)` : agent.label
-  // Pad header to fixed width of 29 chars after "── "
+  // Fill trailing dashes so total line width stays ~33 chars (min 2 dashes)
   const sep = `── ${headerLabel} ` + "─".repeat(Math.max(2, 29 - headerLabel.length))
 
   const { stats } = agent
