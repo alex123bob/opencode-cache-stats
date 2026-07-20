@@ -50,6 +50,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "postbuild": "node -e \"const{cpSync}=require('fs');cpSync('src/dashboard/ui','dist/dashboard/ui',{recursive:true})\"",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run typecheck && npm run build",
     "dashboard": "node bin/dashboard.js"
