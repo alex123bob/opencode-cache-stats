@@ -24,7 +24,7 @@ function connectSSE() {
     }
     render()
   }
-  es.onerror = () => setTimeout(connectSSE, 3000)
+  es.onerror = () => { es.close(); setTimeout(connectSSE, 3000) }
 }
 
 // ── Filters ───────────────────────────────────────────────────────────────────
@@ -426,7 +426,7 @@ function renderHeatmap() {
       <div class="heatmap-grid">${cells}</div>
       <div class="legend">
         <div class="legend-item"><div class="legend-dot hm-none" style="border:1px solid var(--border)"></div>No sessions</div>
-        <div class="legend-item"><div class="legend-dot hm-low"></div>&lt;65%</div>
+        <div class="legend-item"><div class="legend-dot hm-low"></div>40–65%</div>
         <div class="legend-item"><div class="legend-dot hm-mid"></div>65–80%</div>
         <div class="legend-item"><div class="legend-dot hm-high"></div>&gt;80%</div>
         <div class="legend-item"><div class="legend-dot hm-cold"></div>&lt;40% (cold)</div>
