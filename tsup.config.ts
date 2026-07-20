@@ -2,8 +2,9 @@ import { defineConfig } from "tsup"
 
 export default defineConfig({
   entry: {
-    index: "src/index.ts",
-    tui:   "src/tui.ts",
+    index:              "src/index.ts",
+    tui:                "src/tui.ts",
+    "dashboard/server": "src/dashboard/server.ts",
   },
   format: ["esm"],
   dts: true,
