@@ -58,6 +58,5 @@ var tui = async (api) => {
     offMessage();
   });
 };
-var tui_default = tui;
 
-export { tui_default as default, tui };
+export { tui };

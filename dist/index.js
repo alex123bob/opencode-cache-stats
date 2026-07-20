@@ -30,6 +30,5 @@ var server = async (_input) => {
   };
 };
 var id = "opencode-cache-stats";
-var src_default = { id, server };
 
-export { src_default as default, id, server };
+export { id, server };
