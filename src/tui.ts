@@ -90,6 +90,7 @@ export const tui: TuiPlugin = async (api) => {
         parentID,
         label,
         isActive:   true,
+        collapsed:  false,
         lastActive: Date.now(),
         stats:      accumulateStats(undefined, tokens),
       })

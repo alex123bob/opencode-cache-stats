@@ -19,6 +19,7 @@ export type AgentEntry = {
   parentID:   string | null  // null = main agent
   label:      string         // "Main Agent" | "Subagent 1" | "Subagent 2" ...
   isActive:   boolean        // true while turns are still arriving
+  collapsed:  boolean        // true = show header only
   lastActive: number         // Date.now() at last completed turn
   stats:      SessionStats
 }
@@ -75,11 +76,16 @@ export function renderAllAgents(agents: AgentEntry[]): string {
 
 /**
  * Renders one agent's stats block.
+ * When collapsed=true, renders only the header line.
  */
 export function renderAgentSection(agent: AgentEntry): string {
-  const headerLabel = agent.isActive ? `${agent.label} (active)` : agent.label
+  const arrow       = agent.collapsed ? "▶" : "▼"
+  const statusLabel = agent.isActive ? "(active)" : "[done]"
+  const headerLabel = `${agent.label} ${statusLabel}`
   // Fill trailing dashes so total line width stays ~33 chars (min 2 dashes)
-  const sep = `── ${headerLabel} ` + "─".repeat(Math.max(2, 29 - headerLabel.length))
+  const sep = `${arrow} ${headerLabel} ` + "─".repeat(Math.max(2, 27 - headerLabel.length))
+
+  if (agent.collapsed) return sep
 
   const { stats } = agent
   const totalInput = stats.cacheRead + stats.cacheWrite + stats.inputRaw
