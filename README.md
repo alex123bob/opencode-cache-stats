@@ -81,7 +81,7 @@ Example record:
 Start a live web dashboard to explore your cache stats:
 
 ```bash
-npx opencode-cache-stats dashboard
+npx oc-cache-dashboard
 ```
 
 Opens `http://localhost:4321` in your browser automatically. The dashboard:

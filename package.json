@@ -16,7 +16,7 @@
   },
   "main": "./dist/index.js",
   "bin": {
-    "opencode-cache-stats": "bin/dashboard.js"
+    "oc-cache-dashboard": "bin/dashboard.js"
   },
   "types": "./dist/index.d.ts",
   "exports": {
