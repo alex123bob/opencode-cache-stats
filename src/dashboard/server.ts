@@ -17,7 +17,6 @@ const MIME: Record<string, string> = {
 export type ServerOptions = {
   jsonlPath:     string
   preferredPort: number
-  autoOpen:      boolean
 }
 
 export async function startDashboardServer(opts: ServerOptions): Promise<{ url: string }> {
@@ -55,6 +54,11 @@ export async function startDashboardServer(opts: ServerOptions): Promise<{ url: 
     // Static SPA files
     const uiDir    = join(__dirname, "ui")
     const filePath = url === "/" ? join(uiDir, "index.html") : join(uiDir, url.replace(/^\//, ""))
+    if (!filePath.startsWith(uiDir)) {
+      res.writeHead(403)
+      res.end("Forbidden")
+      return
+    }
     try {
       const content = readFileSync(filePath)
       const ext     = extname(filePath)

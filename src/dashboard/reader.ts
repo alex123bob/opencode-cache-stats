@@ -105,6 +105,8 @@ export function readAndAggregate(filePath: string): DashboardData {
       output:       rec.output     ?? 0,
       totalInput:   rec.totalInput ?? 0,
       hitRate:      rec.hitRate    ?? 0,
+      // Deltas: per-turn values from JSONL are per-turn (not cumulative),
+      // so delta = current per-turn value minus previous turn's per-turn value.
       deltaRead:    prevRec ? rec.cacheRead  - prevRec.cacheRead  : null,
       deltaWrite:   prevRec ? rec.cacheWrite - prevRec.cacheWrite : null,
       deltaRaw:     prevRec ? rec.inputRaw   - prevRec.inputRaw   : null,
@@ -156,7 +158,7 @@ function computeCumulative(turns: TurnRecord[]): SessionTotals {
     cacheWrite: totalWrite,
     inputRaw:   totalRaw,
     output:     totalOut,
-    turnCount:  last?.turn ?? turns.length,
+    turnCount:  turns.length,
     hitRate:    totalIn > 0 ? Math.round((totalRead / totalIn) * 1000) / 10 : 0,
   }
 }
@@ -185,19 +187,21 @@ function computeGlobal(sessions: SessionView[]): GlobalStats {
   const avgHitRate      = totalIn > 0 ? Math.round((totalCacheRead / totalIn) * 1000) / 10 : 0
 
   // Daily summaries
-  const dailyMap = new Map<string, { hitRateSum: number; turns: number; sessions: number }>()
+  const dailyMap = new Map<string, { cacheRead: number; totalIn: number; turns: number; sessions: number }>()
   for (const session of sessions) {
-    const date = session.startedAt.slice(0, 10)
-    if (!dailyMap.has(date)) dailyMap.set(date, { hitRateSum: 0, turns: 0, sessions: 0 })
+    const date    = session.startedAt.slice(0, 10)
+    if (!date) continue
+    if (!dailyMap.has(date)) dailyMap.set(date, { cacheRead: 0, totalIn: 0, turns: 0, sessions: 0 })
     const d = dailyMap.get(date)!
-    d.hitRateSum += session.totals.hitRate
-    d.turns      += session.totals.turnCount
-    d.sessions   += 1
+    d.cacheRead += session.totals.cacheRead
+    d.totalIn   += session.totals.cacheRead + session.totals.cacheWrite + session.totals.inputRaw
+    d.turns     += session.totals.turnCount
+    d.sessions  += 1
   }
   const dailySummaries: DailySummary[] = Array.from(dailyMap.entries())
     .map(([date, d]) => ({
       date,
-      hitRate:      Math.round((d.hitRateSum / d.sessions) * 10) / 10,
+      hitRate:      d.totalIn > 0 ? Math.round((d.cacheRead / d.totalIn) * 1000) / 10 : 0,
       turnCount:    d.turns,
       sessionCount: d.sessions,
     }))
