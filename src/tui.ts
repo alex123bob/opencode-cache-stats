@@ -3,7 +3,6 @@ import { onCleanup } from "solid-js"
 import { jsx } from "@opentui/solid/jsx-runtime"
 import {
   type AgentEntry,
-  renderAllAgents,
   renderAgentSection,
   extractTokens,
   extractSessionParent,
@@ -23,7 +22,9 @@ function CacheStatsWidget(props: Record<string, unknown>) {
     const agents = getAgents()
 
     // Remove old children
-    containerRef.children = []
+    for (const child of containerRef.getChildren()) {
+      containerRef.remove(child)
+    }
 
     if (agents.length === 0) {
       containerRef.visible = false
@@ -45,7 +46,7 @@ function CacheStatsWidget(props: Record<string, unknown>) {
         children: content,
         onClick:  () => onToggle(agent.sessionID),
       })
-      containerRef.children.push(node)
+      containerRef.add(node)
     }
 
     api.renderer.requestRender()
