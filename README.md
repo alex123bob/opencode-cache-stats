@@ -76,6 +76,31 @@ Example record:
 > that turn's tokens only). The sidebar hit rate is session-cumulative. Both use
 > the same formula: `cacheRead / (cacheRead + cacheWrite + inputRaw) × 100`.
 
+## Live dashboard
+
+Start a live web dashboard to explore your cache stats:
+
+```bash
+npx opencode-cache-stats dashboard
+```
+
+Opens `http://localhost:4321` in your browser automatically. The dashboard:
+
+- **Live updates** as new turns are appended to the JSONL file
+- **5 views:** Turn Timeline, Turn Deltas, Hit Rate Trend, Token Composition, Cross-session Heatmap
+- **Per-turn deltas** — see how cache read/write/raw changed turn-over-turn and whether the cache is warming up
+- **Filters** — narrow by time range (today / 7d / 30d) and agent type (main / subagents)
+
+### Options
+
+| Flag | Default | Description |
+|---|---|---|
+| `--port` | `4321` | Preferred port (auto-increments if in use) |
+| `--file` | `~/.config/opencode/cache-stats.jsonl` | Path to JSONL |
+| `--no-open` | — | Don't auto-open browser |
+
+Stop with **Ctrl+C**.
+
 ## Cache hit rate definition
 
 ```
