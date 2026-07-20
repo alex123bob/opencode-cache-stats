@@ -74,5 +74,3 @@ export const tui: TuiPlugin = async (api) => {
     offMessage()
   })
 }
-
-export default tui

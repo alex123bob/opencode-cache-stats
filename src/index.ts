@@ -49,5 +49,3 @@ export const server: Plugin = async (_input) => {
 // ── Plugin metadata ────────────────────────────────────────────────────────
 
 export const id = "opencode-cache-stats"
-
-export default { id, server }
