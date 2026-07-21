@@ -54,7 +54,7 @@ function CacheStatsWidget(props: Record<string, unknown>) {
             if (relRow === lineOffset) onToggle(agent.sessionID)
             break
           }
-          lineOffset += sectionLines + 1 // +1 for the "\n" join separator
+          lineOffset += sectionLines // sections are joined with a single "\n", no blank line between
         }
       }
       sync()
