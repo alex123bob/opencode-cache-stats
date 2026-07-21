@@ -34,6 +34,7 @@
   "files": [
     "bin",
     "dist",
+    "scripts",
     "README.md",
     "LICENSE"
   ],
@@ -53,7 +54,8 @@
     "postbuild": "node -e \"const{cpSync}=require('fs');cpSync('src/dashboard/ui','dist/dashboard/ui',{recursive:true})\"",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run typecheck && npm run build",
-    "dashboard": "node bin/dashboard.js"
+    "dashboard": "node bin/dashboard.js",
+    "postinstall": "node scripts/register.cjs"
   },
   "dependencies": {
     "@opentui/core": "^0.4.3",
