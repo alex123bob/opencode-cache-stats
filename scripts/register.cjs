@@ -58,11 +58,15 @@ if (platform === "win32") {
   // macOS / Linux: symlink oc-dash → bin/dashboard.js
   const linkPath = path.join(binDir, "oc-dash");
   try {
-    // Remove stale symlink if it exists
-    if (fs.existsSync(linkPath) || fs.lstatSync(linkPath).isSymbolicLink()) {
+    // Remove stale symlink or file if it exists (lstatSync does NOT follow symlinks,
+    // so it correctly detects broken symlinks that existsSync would miss)
+    const stat = fs.lstatSync(linkPath);
+    if (stat.isSymbolicLink() || stat.isFile()) {
       fs.unlinkSync(linkPath);
     }
-  } catch (_) { /* doesn't exist yet, that's fine */ }
+  } catch (e) {
+    if (e.code !== "ENOENT") throw e;
+  }
 
   try {
     fs.symlinkSync(dashEntry, linkPath);
