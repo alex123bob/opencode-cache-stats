@@ -72,19 +72,19 @@ Example record:
 
 Start a live web dashboard to explore your cache stats.
 
-Add this shell function to your `~/.zshrc` or `~/.bash_profile`:
-
-```bash
-oc-dash() { node ~/.cache/opencode/packages/@alex123bob/opencode-cache-stats@latest/node_modules/@alex123bob/opencode-cache-stats/bin/dashboard.js "$@"; }
-```
-
-Then run:
+The `oc-dash` command is registered automatically when the plugin is installed.
+Run:
 
 ```bash
 oc-dash
 ```
 
-The `@latest` path always resolves to the currently installed version, so the function keeps working after upgrades.
+> **If `oc-dash` is not found:** the installer places the command in `~/.local/bin`
+> (macOS/Linux) or `%APPDATA%\npm` (Windows). Make sure that directory is on your
+> `PATH`. Add to `~/.zshrc` or `~/.bashrc` if needed:
+> ```bash
+> export PATH="$HOME/.local/bin:$PATH"
+> ```
 
 Opens `http://localhost:4321` in your browser automatically. The dashboard:
 
