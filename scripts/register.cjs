@@ -8,6 +8,20 @@ const fs   = require("fs");
 const os   = require("os");
 const path = require("path");
 
+// Only register when this package is being installed as a dependency
+// (i.e., npm_config_global is set, or INIT_CWD differs from the package root,
+// meaning we are NOT running inside the package's own repo).
+// Skip silently when running inside the package itself (CI, dev, publish).
+const selfRoot = path.resolve(__dirname, "..");
+const initCwd  = process.env.INIT_CWD || "";
+
+// npm sets INIT_CWD to the directory where the user ran `npm install`.
+// If INIT_CWD equals our own package root, the user is installing *within* our
+// own repo — skip registration.
+if (initCwd && path.resolve(initCwd) === selfRoot) {
+  process.exit(0);
+}
+
 // ── 1. Resolve the real dashboard entry point ───────────────────────────────
 // __dirname = <pkg-root>/scripts/ when run as postinstall
 const pkgRoot    = path.resolve(__dirname, "..");
